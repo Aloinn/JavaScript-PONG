@@ -15,6 +15,8 @@ document.addEventListener("keyup",keyUpHandler,false);
 */
 
 // PLAYER VARIABLES
+var enter = false;
+
 var playerX = canvas.width/2
 var playerY = canvas.height - 20;
 var playerSpeed = 5;
@@ -25,6 +27,9 @@ var playerRight = false;
 
 // INPUT CHECKER
 function keyDownHandler(a) {
+  if(a.which === 32){
+    enter = true;
+  }
   if(a.key == "Right" || a.key == "ArrowRight"){
     playerRight = true;
   }
@@ -34,6 +39,9 @@ function keyDownHandler(a) {
 }
 
 function keyUpHandler(a) {
+  if(a.which === 32){
+    enter = false;
+  }
   if(a.key == "Right" || a.key == "ArrowRight"){
     playerRight = false;
   }
@@ -100,6 +108,9 @@ function AIThink(){
     enemyMTX = canvas.width-f;//-enemyWidth;
   }
 
+  if(ballSpeedX < 0 && ballSpeedX*t + ballX > 0){
+    enemyMTX = ballX + ballSpeedX*t;
+  }
 }
 //AI MOVE TOWARDS
 function AIMTW(){
@@ -120,9 +131,11 @@ function drawEnemy(){
 }
 
 // BALL VARIABLES
-var ballX = canvas.width/2;
-var ballY = canvas.height/2;
 var ballRadius = 10;
+
+var ballX = canvas.width/2;
+var ballY = enemyY + ballRadius + 15;
+
 var r = Math.random() < 0.5 ? -1 : 1;
 var ballSpeedX = r*Math.floor((Math.random() * 3) + 1);
 var ballSpeedY = 5;
@@ -142,15 +155,33 @@ function stepBall(){
   }
 
   // IF BOUNCING DIRETCLY OFF PLAYER'S PAD (HIT)
-  if(Math.abs(ballY + ballRadius + ballSpeedY - playerY) == 0  && Math.abs(ballX  - playerX) < playerWidth + ballRadius){
-    ballSpeedY = -ballSpeedY;
+  if(Math.abs(ballY + ballRadius + ballSpeedY - playerY) < ballSpeedY  && Math.abs(ballX  - playerX) < playerWidth + ballRadius){
     AIThink();
+    ballSpeedY = -ballSpeedY;
   }
 
   // IF BOUNCING OFF ENEMY'S PAD (HIT)
-  if(Math.abs(ballY - ballRadius + ballSpeedY - enemyY) == 0  && Math.abs(ballX  - enemyX) < enemyWidth + ballRadius){
+  if(Math.abs(ballY - ballRadius + ballSpeedY - enemyY) < Math.abs(ballSpeedY)  && Math.abs(ballX  - enemyX) < enemyWidth + ballRadius){
     ballSpeedY = -ballSpeedY;
+    ballSpeedY += Math.sign(ballSpeedY)*0.3;
   }
+
+  // IF HITTING PLAYER'S SIDE OF FIELD
+  if(ballY + ballRadius + ballSpeedY > canvas.height){
+    over = true;
+    endText = "You lose!";
+    ballY = canvas.height - ballSpeedY - ballRadius;
+    enemyScore += 1;
+  }
+
+  // IF HITTING ENEMY'S SIDE OF FIELD
+  if(ballY - ballSpeedY < 0){
+    over = true;
+    endText = "You win!";
+    ballY = 0;
+    playerScore +=1;
+  }
+  // MOVE BALL
   ballY += ballSpeedY;
 }
 // DRAWING THE BALL
@@ -165,7 +196,19 @@ function drawBall(){
 // DRAWING EVERYTHING
 function draw(){
   // IF START OR MENU
-  if(start){
+  if(over){
+    ctx.clearRect(0,0,canvas.width, canvas.height);
+    drawEnd();
+    drawBall();
+    drawEnemy();
+    drawPlayer();
+
+    if(enter){
+      reset();
+      over = false;
+      start = false;
+    }
+  } else if(start){
     ctx.clearRect(0,0,canvas.width, canvas.height);
     stepPlayer();
     drawPlayer();
@@ -176,19 +219,59 @@ function draw(){
   } else {
     ctx.clearRect(0,0,canvas.width, canvas.height);
     drawMenu();
+    drawEnemy();
+    drawPlayer();
+    drawBall();
 
     if(playerLeft || playerRight)
     {start = true;}
   }
 }
+function reset(){
+  // PLAYER VARIABLES
+  playerX = canvas.width/2
+  playerY = canvas.height - 20;
+  playerSpeed = 5;
+  playerWidth = 25;
 
+  // ENEMY VARIABLES
+  enemyX = canvas.width/2;
+  enemyY = 20;
+  enemySpeed = 4;
+  enemyWidth = 25;
+  enemyMTX = enemyX;
+
+  // BALL VARIABLES
+  ballX = canvas.width/2;
+  ballY = enemyY + ballRadius + 15;
+  ballRadius = 10;
+  r = Math.random() < 0.5 ? -1 : 1;
+  ballSpeedX = r*Math.floor((Math.random() * 3) + 1);
+  ballSpeedY = 5;
+}
+// GAMEOVER
+function drawEnd(){
+  ctx.font = "30px Comic Sans MS";
+  ctx.textAlign = "center";
+  ctx.fillText(playerScore, canvas.width*0.33,100);
+  ctx.fillText("-",canvas.width/2,100);
+  ctx.fillText(enemyScore, canvas.width*0.66,100);
+  ctx.fillText(endText, canvas.width/2,130);
+  ctx.fillText("Press space to play again", canvas.width/2,160);
+}
 // MENU TO START
 function drawMenu(){
   ctx.font = "30px Comic Sans MS";
-  ctx.fillText("Press left or right key to start!", 30,30)
+  ctx.textAlign = "center";
+  ctx.fillText("Press left or right key to start!", canvas.width/2,130)
 }
 
 // STARTING THE GAME
 setInterval(draw,15);
 
 var start = false;
+var over = false;
+
+var endText = "";
+var playerScore = 0;
+var enemyScore = 0;
