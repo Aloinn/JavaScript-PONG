@@ -27,7 +27,7 @@ var playerRight = false;
 
 // INPUT CHECKER
 function keyDownHandler(a) {
-  if(a.which === 32){
+  if(a.which === 16){
     enter = true;
   }
   if(a.key == "Right" || a.key == "ArrowRight"){
@@ -39,7 +39,7 @@ function keyDownHandler(a) {
 }
 
 function keyUpHandler(a) {
-  if(a.which === 32){
+  if(a.which === 16){
     enter = false;
   }
   if(a.key == "Right" || a.key == "ArrowRight"){
@@ -257,7 +257,7 @@ function drawEnd(){
   ctx.fillText("-",canvas.width/2,100);
   ctx.fillText(enemyScore, canvas.width*0.66,100);
   ctx.fillText(endText, canvas.width/2,130);
-  ctx.fillText("Press space to play again", canvas.width/2,160);
+  ctx.fillText("Press shift to play again", canvas.width/2,160);
 }
 // MENU TO START
 function drawMenu(){
